@@ -23,9 +23,9 @@ class Face():
     def plot(self):
         fig = plt.figure()
         ax = fig.add_subplot(1,2,1)
-        self.face2D.plot(ax)
+        self.face2D.plot(ax=ax)
         ax = fig.add_subplot(1,2,2,projection = '3d')
-        self.face3D.plot(ax)
+        self.face3D.plot(ax=ax)
         fig.set_size_inches(16,6,forward=True)
         plt.tight_layout()
         

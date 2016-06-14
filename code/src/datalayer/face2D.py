@@ -35,13 +35,13 @@ if __name__ == '__main__':
     #face.plot()
     face = read2DFace('../../data/bs004/bs004_N_N_0')
     print [x.toString() for x in face.landmarks]
-    #face.plot(100,100)
+    face.plot(100,100)
     #plt.show()
     #r,g,b = face.getImg().split()
     #plt.imshow(b)
     #plt.show()
-    coors = toCoors(face.getImg())
+    #coors = toCoors(face.getImg())
     #print coors.shape
-    img = toImg(coors)
-    plt.imshow(img)
+    #img = toImg(coors)
+    #plt.imshow(img)
     plt.show()
