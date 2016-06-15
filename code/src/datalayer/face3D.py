@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from datalayer.landmark import read3DLandmarks
 from util.grid import gridCoordinates
+from util.imgtocoors import toImg
 
 
 def read3DFace(facefile):
@@ -37,7 +38,11 @@ class Face3D():
             ax = fig.gca(projection='3d')
         #ax.plot_surface(x,y,z,rstride=2,cstride=2)
         ax.plot_wireframe(x,y,z,rstride=1,cstride=1)
-        
+    
+    def getImg(self,nx=100,ny=100):
+        x,y,z = gridCoordinates(self.filter(self.coors),nx,ny)
+        return toImg(z)
+    
     def plotDepth(self,nx=100,ny=100,ax=None):
         x,y,z = gridCoordinates(self.filter(self.coors),nx,ny)
         if ax == None:

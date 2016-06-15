@@ -11,9 +11,9 @@ def gridCoordinates((x,y,z),nx,ny):
     x1 = np.linspace(min(x),max(x),nx)
     y1 = np.linspace(min(y),max(y),ny)
     x1,y1 = np.meshgrid(x1,y1)
-    print "before griddata"
+    #print "before griddata"
     z1 = griddata((x,y),z,(x1,y1))
-    print "after griddata"
+    #print "after griddata"
     return x1,y1,z1
 
 def resizeMatrix(z,nx,ny):

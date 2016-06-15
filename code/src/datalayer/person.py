@@ -6,61 +6,68 @@ Created on 6 Jun 2016
 import matplotlib.pyplot as plt
 from datalayer.face import readFace
 import pickle
+from datalayer.facetype import getFaceTypes
 
-def getFaceTypes():
-    return {'anger' : 'E_ANGER',
-             'disgust' : 'E_DISGUST',
-             'fear' : 'E_FEAR',
-             'happy' : 'E_HAPPY',
-             'sadness' : 'E_SADNESS',
-             'surprise' : 'E_SURPRISE',
-             'neutral' : 'N_N',
-             'obscured' : 'O_EYE'
-             }
 
 def readPerson(i,facetypes):
     data = '../../data/'
     folder = "bs00" + str(i) + "/"
     prefix = "bs00" + str(i) + "_"
     postfix = "_0"
-    faces = {}
+    faces = []
     for postfix in ["_0","_1"]:
         for facetype in facetypes.keys():
             middle = facetypes[facetype]
             personfile = data + folder + prefix + middle + postfix
             try:
                 face = readFace(personfile)
-                emotion = facetype if postfix == "_0" else facetype + postfix
-                faces[emotion] = face
+                faces.append(face)
             except:
                 pass
-    return Person(faces)
+    return Person(i,faces)
     
-def readPersons():
+def readPersons(start=0,end=10):
     facetypes = getFaceTypes()
-    facetypes.pop('obscured')
-    return [readPerson(i,facetypes) for i in range(0,10)]
+    return [readPerson(i,facetypes) for i in range(start,end)]
 
-
-def savePersons():
-    facetypes = getFaceTypes()
-    facetypes.pop('obscured')
-    persons = readPersons()
+def savePersons(persons):
     f = open('../../data/persons.pkl','w')
     pickle.dump(persons,f)
-
+def saveFaces(faces,name="faces"):
+    name += ".pkl"
+    f = open('../../data/'+name,'w')
+    pickle.dump(faces,f)
+    
 def loadPersons():
     f = open('../../data/persons.pkl','r')
+    return pickle.load(f)
+def loadFaces(name="faces"):
+    name += ".pkl"
+    f = open('../../data/'+name,'r')
     return pickle.load(f)
 
 class Person():
     
-    def __init__(self,faces):
+    def __init__(self,index,faces):
         self.faces = faces
+        self.index = index
+    
+    def __str__(self):
+        value = "person" + str(self.index) + "\n"
+        value += "faces: "
+        for face in self.faces:
+            value += str(face) + " "
+        return value
 
 if __name__ == '__main__':
-    persons = loadPersons()
-    person = persons[3]
-    for face in person.faces.values():
-        face.plot()
-        plt.show()
+    persons = readPersons(5,10)
+    faces = []
+    for person in persons:
+        for face in person.faces:
+            faces.append(face)
+            print face
+    saveFaces(faces,'testset')
+#     savePersons()
+#     persons = loadPersons()
+#     for person in persons:
+#         print person
