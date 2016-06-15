@@ -6,30 +6,45 @@
 \usepackage[english]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
-\usepackage[backend=bibtex]{biblatex}
+%\usepackage[backend=biber]{biblatex}
 %\usepackage{booktabs}
 %\usepackage{amsmath}
 %\usepackage{listings}
 \graphicspath{{img/}}
 %\usepackage{caption}
 %\usepackage{subcaption}
-\bibliography{references}
+%\bibliography{references}
 \title{Biometrics Systems Concepts:\\ 2D + 3D face recognition}
 \author{Tom Decroos\\r0297757}
 \begin{document}
 \maketitle
 \begin{abstract}
-	
+This report discusses the implementation of a face recognition system that makes use of 2D and 3D face representations. First, three relevant papers are discussed: a paper about using eigenfaces for facial recognition, a paper about using local binary patterns and a paper about combining 2D and 3D face recognition. Next, we describe the implementation of our face recognition system. Our implementation uses methods that are heavily based on the three papers we read. Finally, experiments are performed for 2D face recognition, 3D face recognition and the combination of 2D and 3D face recognition.
 \end{abstract}
-\section{Literature study}
-\subsection{Paper holistic approach}
 
-\subsection{Paper feature based approach}
+\section{Literature study}
+We discuss three relevant papers about face recognition systems. The first paper provides a holistic approach for recognizing faces. The used method is eigenfaces. The second paper provides a feature based approach. The used method is local binary patterns.
+The third paper discusses the fusion of 2D and 3D face recognition. It reports on a large experimental study on multimodal face recognition. For each paper, a small summary is provided, together with possible advantages and disadvantages. We focus in our discussions mostly on the parts of the papers that are relevant for this report.
+
+\subsection{Holistic approach: eigenfaces}
+The paper we read for recognizing faces with a holistic approach is `Use of depth and colour eigenfaces for face recognition' by F. Tsalakanidou, D.Tzovaras and M.G. Strintzis \cite{tsalakanidou2003use}.
+%\paragraph{Summary}
+This paper first discusses the extraction of depth maps. Most face recognition systems are based on the evaluation of 2D-intensity or colour im ages. These systems are subject to a variety of errors caused by differences in illumination, head rotation, face pigment or facial expressions. Biometric features from 3D measurements are expected to perform well, due to their relative independence from these differences. One way of exploiting the 3D information of the geometric characteristics of a human face is by building a depth map. The depth map of a face is a function giving for each pixel of an image the distance to the camera. Such a depth map can be extracted from a set of 3D coordinates of points using the z-buffer algorithm.
+
+Next, the classification method is discussed. The paper proposes a powerful global approach (PCA) in which the whole image (colour or depth map) serves as a feature vector and the variability of the face is modelled by analyzing its statistical properties using a large set of faces. PCA is a well-known, widely and successfully used method. The application of PCA for face recognition is very simple: PCA is performed in a well-defined set of images of human faces and a set of principal components is obtained. These principal components are called eigenfaces. Every face in the database can then be represented as a vector of weights. The weights are obtained by projecting the image of the face on the eigenfaces. Identification of a new test image is then done by locating the image in the database whose weights have the smallest euclidean distance from the weights of the test image. The authors of the paper observed experimentally that the accuracy of this approach quickly degrades if there are changes in scale. This can be explained by the low correlation between face images at different scales. Hence, to successfully apply this approach, all faces in the database must be uniformly scaled.
+
+This approach can only be applied on single channel signals such as a depth map or a grayscale image. In case of face recognition from full colour images, this approach is applied to each component of the colour signal. The PCA algorithm is performed for training sets of each component. When a new image needs to be recognized, its projection to the subspace of each component is computed. The image is then assigned to the class that results in the smallest product of the euclidean distances of each component. This combination approach based on the product of the euclidean distances of each component can also be used to combine a colour and a depth map for 2D + 3D face recognition.
+
+Finally, the eigenfaces approach was evaluated on three representations of faces: colour map, depth map and combination of colour and depth. Experiments were performed on images of 40 people. For each person, there were four colour images and two depth maps available. The training set consisted of two colour images and one depth map for each person. The test set consisted of the remaining two colour images and depth map for each person. The eigenfaces approach achieves a recognition rate of 87.5\% using only colour images, 85\% using depth maps and 97.5\% using the combination. These results show that adding depth information leads to significant gains in recognizing faces.
+\subsection{Feature based approach: local binary patterns}
+\subsection{Fusion of 2D and 3D face recognition}
 \section{Methods}
 \subsection{2D face recognition}
 \subsection{3D face recognition}
 \subsection{fusion}
 \section{Experiments}
 \section{Conclusion}
-\printbibliography
+%\printbibliography
+\bibliography{references}
+\bibliographystyle{plain}
 \end{document}
