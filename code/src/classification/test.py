@@ -54,7 +54,7 @@ def plotgallery(images):
 if __name__ == '__main__':
     faces = loadFaces('trainset')
     gallery = [face for face in faces if face.emotion=="neutral" and face.index ==0]
-    images,labels = get_images_and_labels(gallery,get3Dimage)
+    images,labels = get_images_and_labels(gallery,get2Dimage)
     plotgallery(images)
     recognizer = cv2.createLBPHFaceRecognizer()
     #print images

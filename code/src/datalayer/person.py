@@ -46,6 +46,7 @@ def loadFaces(name="faces"):
     f = open('../../data/'+name,'r')
     return pickle.load(f)
 
+
 class Person():
     
     def __init__(self,index,faces):
