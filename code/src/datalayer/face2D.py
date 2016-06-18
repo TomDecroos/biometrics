@@ -40,7 +40,8 @@ if __name__ == '__main__':
     #r,g,b = face.getImg().split()
     #plt.imshow(b)
     #plt.show()
-    #coors = toCoors(face.getImg())
+    coors = toCoors(face.getImg())
+    print coors
     #print coors.shape
     #img = toImg(coors)
     #plt.imshow(img)

@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from datalayer.landmark import read3DLandmarks
 from util.grid import gridCoordinates
-from util.imgtocoors import toImg
+from util.imgtocoors import toImg, toCoors
 
 
 def read3DFace(facefile):
@@ -32,19 +32,34 @@ class Face3D():
                      if abs(xi) < 500 and abs(zi) < 500 and abs(yi) < 500])                                                      
         
     def plot(self,nx=100,ny=100,ax = None):
-        x,y,z = gridCoordinates(self.filter(self.coors),nx,ny)
+        x,y,z = self.getCoordinates(nx, ny)
         if ax == None:
             fig = plt.figure()
             ax = fig.gca(projection='3d')
         #ax.plot_surface(x,y,z,rstride=2,cstride=2)
         ax.plot_wireframe(x,y,z,rstride=1,cstride=1)
     
-    def getImg(self,nx=100,ny=100):
+    def getCoordinates(self,nx=100,ny=100):
         x,y,z = gridCoordinates(self.filter(self.coors),nx,ny)
-        return toImg(z)
+        _min =  np.min(z[np.where(np.invert(np.isnan(z)))])
+        _max = np.max(z[np.where(np.invert(np.isnan(z)))])
+        z[np.where(np.isnan(z))] = _min
+        z -= _min
+        #z = 200*(z-_min)
+        #z = z/(_max-_min)
+        n,m =z.shape
+        z1 = np.zeros((n,m))
+        for i in range(0,n):
+            for j in range(0,m):
+                z1[i,j] = z[n-i-1,j]
+        return x,y,z1
+    
+    def getImg(self,nx=100,ny=100):
+        coors = self.getCoordinates(nx, ny)
+        return toImg(coors[2])
     
     def plotDepth(self,nx=100,ny=100,ax=None):
-        x,y,z = gridCoordinates(self.filter(self.coors),nx,ny)
+        z = self.getImg(nx,ny)
         if ax == None:
             fig = plt.figure()
             ax = fig.add_subplot(1,1,1)
@@ -53,5 +68,7 @@ class Face3D():
 if __name__ == '__main__':
     face = read3DFace('../../data/bs004/bs004_N_N_0')
     print [x.toString() for x in face.landmarks]
-    face.plotDepth()
+    face.plotDepth(200,200)
+    plt.show()
+    face.plot()
     plt.show()
