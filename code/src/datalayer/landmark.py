@@ -31,5 +31,5 @@ class Landmark():
         self.name = name
         self.coor = coor
     
-    def toString(self):
+    def __str__(self):
         return str((self.name,self.coor))

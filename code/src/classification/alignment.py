@@ -84,8 +84,10 @@ def CropFace(image, eye_left=(0,0), eye_right=(0,0), offset_pct=(0.2,0.2), dest_
 
 if __name__ == "__main__":
     image =  Image.open("../../data/arnie.jpg")
+    plt.imshow(image)
+    plt.scatter([252,420],[364,366],s=50,c='red')
     newimg = CropFace(image, eye_left=(252,364), eye_right=(420,366), offset_pct=(0.2,0.2), dest_sz=(90,100))
-    plt.imshow(newimg)
+    #plt.imshow(newimg)
     plt.show()
     #.save("arnie_10_10_200_200.jpg")
     #CropFace(image, eye_left=(252,364), eye_right=(420,366), offset_pct=(0.2,0.2), dest_sz=(200,200))#.save("arnie_20_20_200_200.jpg")
