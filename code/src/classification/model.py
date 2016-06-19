@@ -7,10 +7,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from util.imgtocoors import toCoors
 import cv2
-from datalayer.person import loadFaces
 from datalayer.gallery import getGallery, getProbes
 from classification.combine import combinePreds
 from classification.imagefuns import get2Dimage, get3Dimage
+from classification.matchscorecombine import product
 
 class BaseModel:
     
@@ -114,26 +114,13 @@ class LBPHModel(MatchScoreModel):
 
 class MatchScoreFusionModel(BaseFusionModel,MatchScoreModel):
     
-    def __init__(self, models):
+    def __init__(self, models,combinefun=product):
         BaseFusionModel.__init__(self, models)
-    
+        self.combinefun = combinefun
+        
     def getMatchScores(self,probe):
         scores = [model.getMatchScores(probe) for model in self.models]
-        nbmodels = len(scores)
-        nbgallery = len(scores[0])
-        combinedscores = [t for t in scores[0]]
-        for i in range(0,nbgallery):
-            for j in range(1,nbmodels):
-                old = combinedscores[i]
-                add = scores[j][i]
-                assert(old[0] == add[0])
-                new = (old[0],old[1]*add[1])
-                #print old,new
-                combinedscores[i] = new 
-        #print "scores", scores
-        #print "combinedscores", combinedscores
-        return combinedscores
-    
+        return self.combinefun(scores)
     def predict(self,probe):
         return MatchScoreModel.predict(self, probe)
 
@@ -143,7 +130,7 @@ class LBPHFusionModel(MatchScoreFusionModel):
         MatchScoreFusionModel.__init__(self, models)
     
 if __name__ == '__main__':
-    
+    from datalayer.person import loadFaces
     def get2DModel(index):
         recognizer = cv2.createLBPHFaceRecognizer()
         return SimpleModel(recognizer,lambda x: get2Dimage(x,index))

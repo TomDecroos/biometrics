@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 from classification.preprocess import rotatePoint
 from classification.alignment import ScaleRotateTranslate
 import math
-from datalayer.person import loadFaces
 from plots import saveplot
 
 def preprocess2DImg(face):
@@ -50,10 +49,12 @@ def preprocess2DImg(face):
     top = int(min(y))
     right = int(max(x))
     bottom = int(max(y))
-    img = img.crop((left,top,right,bottom))
+    adjtop = int(top-0.1*(bottom-top))
+    
+    img = img.crop((left,adjtop,right,bottom))
     axs[2].imshow(img,aspect='equal')
     x = [a-left for a in x]
-    y = [a-top for a in y]
+    y = [a-adjtop for a in y]
     axs[2].scatter(x,y,s=50,c='red')
     w,h = img.size
     axs[2].set_xlim(0,w)
@@ -62,8 +63,12 @@ def preprocess2DImg(face):
     fig.tight_layout()
     
 if __name__ == '__main__':
+    from datalayer.person import loadFaces
     faces = loadFaces('trainset')
     face = faces[16]
     preprocess2DImg(face)
-    saveplot('methods/preprocess2D')
+    #saveplot('methods/preprocess2D')
     plt.show()
+    for face in faces:
+        preprocess2DImg(face)
+        plt.show()

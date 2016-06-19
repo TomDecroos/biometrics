@@ -38,6 +38,11 @@ class Face3D():
             ax = fig.gca(projection='3d')
         #ax.plot_surface(x,y,z,rstride=2,cstride=2)
         ax.plot_wireframe(x,y,z,rstride=1,cstride=1)
+#         
+#         def transformla(la):
+#             return la[0],la[1],la[2]+150
+#         x,y,z=zip(*[transformla(la.coor) for la in self.landmarks])
+#         ax.scatter(x,y,z,c='red')
     
     def getCoordinates(self,nx=100,ny=100):
         x,y,z = gridCoordinates(self.filter(self.coors),nx,ny)
@@ -51,7 +56,7 @@ class Face3D():
         z1 = np.zeros((n,m))
         for i in range(0,n):
             for j in range(0,m):
-                z1[i,j] = z[n-i-1,j]
+                z1[i,j] = z[n-1-i,j]
         return x,y,z1
     
     def getImg(self,nx=100,ny=100):
@@ -65,10 +70,27 @@ class Face3D():
             ax = fig.add_subplot(1,1,1)
         ax.imshow(z)
         
+    def plotDepthandLandmarks(self,nx=90,ny=100):
+        x,y,z = gridCoordinates(self.filter(self.coors),nx,ny)
+        top = min(y.flatten())
+        bottom = max(y.flatten())
+        left = min(x.flatten())
+        right = max(x.flatten())
+        
+        def transformLA(landmark):
+            x = int(nx*(landmark.coor[0]-left)/(right-left))
+            y = int(nx*(landmark.coor[1]-top)/(bottom-top))
+            return x,ny-y
+        
+        plt.imshow(self.getImg())
+        x,y = zip(*[transformLA(landmark) for landmark in self.landmarks])
+        plt.scatter(x,y)
+        plt.show()
+            
 if __name__ == '__main__':
     face = read3DFace('../../data/bs004/bs004_N_N_0')
-    print [x.toString() for x in face.landmarks]
-    face.plotDepth(200,200)
-    plt.show()
+    print [x for x in face.landmarks]
     face.plot()
+    #face.plotDepth(200,200)
     plt.show()
+    #face.plotDepthandLandmarks(90, 100)

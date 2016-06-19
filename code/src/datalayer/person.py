@@ -61,13 +61,13 @@ class Person():
         return value
 
 if __name__ == '__main__':
-    persons = readPersons(5,10)
+    persons = readPersons(0,5)
     faces = []
     for person in persons:
         for face in person.faces:
             faces.append(face)
             print face
-    saveFaces(faces,'testset')
+    saveFaces(faces,'trainset')
 #     savePersons()
 #     persons = loadPersons()
 #     for person in persons:

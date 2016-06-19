@@ -3,12 +3,13 @@ Created on 18 Jun 2016
 
 @author: Tom
 '''
-import matplotlib.pyplot as plt
-from util.imgtocoors import toCoors
-from classification.model import LBPHModel, LBPHFusionModel
-from datalayer.person import loadFaces
-from datalayer.gallery import getGallery, getProbes
 from classification.imagefuns import get3Dimage, getrgbfuns
+from classification.model import LBPHModel, LBPHFusionModel
+from datalayer.gallery import getGallery, getProbes
+from datalayer.person import loadFaces
+import matplotlib.pyplot as plt
+
+
 width=150
 height=150
 faceset = 'faces'
@@ -35,15 +36,16 @@ def plotGallery(preprocess=False):
 def saveplot(name,app='.pdf'):
     plt.savefig("../../../report/img/experiments/" + name + app)
     
-def separatechannels(preprocess=False):
+def separatecolourchannels(preprocess=False):
     for i in range(0,3):
         model = LBPHModel(getrgbfuns(preprocess=preprocess)[i])
         model.train(gallery)
         print 'recognition rate ' + 'rgb'[i]+ ":", model.getRecognitionRate(probes)
-    
-    model = LBPHModel(get3Dimage)
+
+def depth():
+    model = LBPHModel(lambda x:get3Dimage(x,140,155))
     model.train(gallery)
-    print 'recognition rate 3d:', model.getRecognitionRate(probes)
+    print 'recognition rate depth:', model.getRecognitionRate(probes)
     
 def colour(preprocess=False):
     model = LBPHFusionModel(getrgbfuns(preprocess=preprocess))
@@ -52,13 +54,14 @@ def colour(preprocess=False):
 
 def colouranddepth(preprocess=False):
     imgfuns = getrgbfuns(preprocess=preprocess)
-    imgfuns.append(get3Dimage)
+    imgfuns.append(lambda x:get3Dimage(x,140,155))
     model = LBPHFusionModel(imgfuns)
     model.train(gallery)
     print 'recognition rate colour and depth:', model.getRecognitionRate(probes)
     
 if __name__ == '__main__':
-    plotGallery(True)
-    separatechannels(True)
-    colour(True)
-    colouranddepth()
+    #plotGallery(True)
+    separatecolourchannels(False)
+    #depth()
+    colour(False)
+    colouranddepth(False)

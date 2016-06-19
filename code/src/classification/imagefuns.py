@@ -4,13 +4,12 @@ Created on 18 Jun 2016
 @author: Tom
 '''
 from util.imgtocoors import toCoors
-from classification.preprocess import transformed2Dimg
 width = 90
 height = 100
 
 def get2Dimage(face,index,width = width,height = height,preprocess=False):
     if preprocess:
-        img = transformed2Dimg(face)
+        img = face.face2D.getTransformedImg()
     else:
         img = face.face2D.getImg()
     img = img.resize((width,height))
@@ -18,7 +17,7 @@ def get2Dimage(face,index,width = width,height = height,preprocess=False):
     return coors[index]
 
 def get3Dimage(face,width=width,height=height):
-    img = face.face3D.getImg().resize((width,height))
+    img = face.face3D.getImg(width,height)
     coors = toCoors(img)
     return coors
 
