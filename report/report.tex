@@ -11,6 +11,7 @@
 %\usepackage{amsmath}
 %\usepackage{listings}
 \graphicspath{{img/}}
+\graphicspath{{img/literature/}}
 %\usepackage{caption}
 %\usepackage{subcaption}
 %\bibliography{references}
@@ -66,16 +67,55 @@ It has also been observed experimentally that the performance of the Eigenfaces 
 %lbp searches for patters, size is less important.
 %micro-patterns invariant to monotonic grey scale trasnformation
 %\subsection{Fusion of 2D and 3D face recognition}
-\section{Methods}
-%preprocessing on 2d faces
-%splitting colour images in 3 channels
 
+\section{Methods}
+\graphicspath{{img/methods/}}
+In this section, we describe our methods for face recognition on 2D colour images and 3D point clouds. We describe the conversion of a colour image in three different channels and the conversion of a point cloud into a depth map. Next, we state our used similarity measure between channels and motivate this choice. We list possible ways of combining similarity measures of different channels. Finally, we explain a preprocessing procedure for 2D images.
+
+\subsection{Channels}
+Algorithms such as Eigenfaces or the LBP algorithm require images to be represented as a matrix $X$. The element $x_{ij}$ then represents the value of the pixel at position $(i,j)$. Colour images do not have a single value per pixel, they have three. A colour image can easily be converted into a grayscale image, but then some information about the image is lost. To prevent information loss,  all colour images are split in their three colour channels (Figure \ref{fig:colour-channels}).
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\textwidth]{coloursplitting.pdf}
+	\caption{Example of a colour image being split into its three different colour channels}
+	\label{fig:colour-channels}
+\end{figure}
+
+Converting a 3D point cloud into a 2D matrix that still represents a face is not as trivial however. We convert the point cloud into a depth map. This depth map should show a front view of the face. The value of each pixel in this depth map should represent how close the face was to the camera in the location of that pixel. We construct a depth map in the following way.
+
+We first remove outlier points that definitely do not belong to the face. These outlier points can be detected using statistical measures such as the robust Mahalanobis distance or we can also set arbitrary thresholds based on some exploratory data analysis. All observed faces of the dataset used in this report showed no $x$,$y$ or $z$-coordinates with an absolute value greater than 200, while all outliers always had the same specific coordinate: (999999,999999,999999). Since the 3D point clouds used in this report only contain one specific type of outlier, a threshold that filters these points is deemed good enough to remove all outliers. In our implementation for our given dataset, all data points should satisfy the constraint: $|x|<500 \wedge |y| < 500 \wedge |z| < 500$.
+
+It seems that the 3D point clouds of the faces in our dataset are roughly aligned with the $xy$-surface. This means that a depth map of the face can be constructed by looking only at the $z$-coordinates. To construct a depth map of size $m \times n$, we need the $z$-coordinates of all data points of the intersections on a $m \times n$ grid overlaying the 3D face on the $xy$-surface. Unfortunately our point cloud does not follow a grid-like structure. To solve this, we first overlay the face with the smallest rectangle that still covers all data points. This rectangle is then split in a  $m \times n$ grid. The $z$-coordinates of all points on this grid are then linearly interpolated. In our implementation this linear interpolation is done by first triangulating the point cloud using Qhull and performing linear barycentric interpolation on each triangle. \cite{numpy}
+Points on the grid that cannot be interpolated because they fall outside the point cloud are given the same $z$-value as the point with the lowest $z-value$ in the point cloud. These points represent a wall behind the face.
+
+Finally, the $x$ and $y$-coordinates of the grid are dropped and only the interpolated $z$-values are kept in a $m \times n$ matrix. The values in
+\begin{figure}
+	\centering
+	\includegraphics[width=\textwidth]{depthmapgeneration.pdf}
+	\caption{Conversion of a 3D point cloud of a face into a depth map by constructing a grid and interpolating the Z-coordinates of that grid.}
+	\label{fig:depthmap-generation}
+\end{figure}
+
+
+%splitting colour images in 3 channels
 %how depth map was generated, 1.remove outliers 2. grid data
 
 %using LBP algorithm because better than eigenfaces, confirmed in pilot experiments
+
 %combining match scores by multiplying
 
+%preprocessing on 2d faces
+
 \section{Experiments}
+\graphicspath{{img/experiments/}}
+We have conducted experiments to attempt to answer the following research questions.
+\begin{itemize}
+	\item[Q1] Is it better to preprocess the face images or do the raw images perform better?
+	\item[Q2] Does fusion significantly raise the recognition rate?
+	\item[Q3] What is the contribution of depth to our face recognizer?
+	\item[Q4] What is the best way to fuse match scores?
+\end{itemize}
 % already almost perfect score for training set + no real parameters to tune -> lets use full set
 
 % results for 4 channels, colour and colour + depth
