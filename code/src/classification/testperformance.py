@@ -10,8 +10,8 @@ from datalayer.person import loadFaces
 import matplotlib.pyplot as plt
 
 
-width=150
-height=150
+width=140
+height=155
 faceset = 'faces'
 
 faces = loadFaces(faceset)
@@ -61,7 +61,7 @@ def colouranddepth(preprocess=False):
     
 if __name__ == '__main__':
     #plotGallery(True)
-    separatecolourchannels(False)
-    #depth()
-    colour(False)
+    #separatecolourchannels(False)
+    depth()
+    #colour(False)
     colouranddepth(False)
