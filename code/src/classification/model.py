@@ -125,9 +125,9 @@ class MatchScoreFusionModel(BaseFusionModel,MatchScoreModel):
         return MatchScoreModel.predict(self, probe)
 
 class LBPHFusionModel(MatchScoreFusionModel):
-    def __init__(self, imgfuns):
+    def __init__(self, imgfuns,combinefun=product):
         models = [LBPHModel(imgfun) for imgfun in imgfuns]
-        MatchScoreFusionModel.__init__(self, models)
+        MatchScoreFusionModel.__init__(self, models,combinefun)
     
 if __name__ == '__main__':
     from datalayer.person import loadFaces

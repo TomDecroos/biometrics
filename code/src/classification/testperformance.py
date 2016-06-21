@@ -8,10 +8,11 @@ from classification.model import LBPHModel, LBPHFusionModel
 from datalayer.gallery import getGallery, getProbes
 from datalayer.person import loadFaces
 import matplotlib.pyplot as plt
+from classification.matchscorecombine import product, plus, minimum, confidence
 
 
-width=140
-height=155
+width=135
+height=150
 faceset = 'faces'
 
 faces = loadFaces(faceset)
@@ -47,21 +48,21 @@ def depth():
     model.train(gallery)
     print 'recognition rate depth:', model.getRecognitionRate(probes)
     
-def colour(preprocess=False):
-    model = LBPHFusionModel(getrgbfuns(preprocess=preprocess))
+def colour(preprocess=False,combinefun=product):
+    model = LBPHFusionModel(getrgbfuns(preprocess=preprocess),combinefun=combinefun)
     model.train(gallery)
     print 'recognition rate colour:', model.getRecognitionRate(probes)
 
-def colouranddepth(preprocess=False):
+def colouranddepth(preprocess=False,combinefun=product):
     imgfuns = getrgbfuns(preprocess=preprocess)
-    imgfuns.append(lambda x:get3Dimage(x,140,155))
-    model = LBPHFusionModel(imgfuns)
+    imgfuns.append(lambda x:get3Dimage(x,width,height))
+    model = LBPHFusionModel(imgfuns,combinefun=combinefun)
     model.train(gallery)
     print 'recognition rate colour and depth:', model.getRecognitionRate(probes)
     
 if __name__ == '__main__':
     #plotGallery(True)
-    #separatecolourchannels(False)
-    depth()
-    #colour(False)
-    colouranddepth(False)
+    separatecolourchannels(True)
+    #depth()
+    colour(True,combinefun=product)
+    colouranddepth(preprocess=True,combinefun=product)

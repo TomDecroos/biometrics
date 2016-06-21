@@ -7,7 +7,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
 %\usepackage[backend=biber]{biblatex}
-%\usepackage{booktabs}
+%\usepackage[]{biblatex}
+\usepackage{booktabs}
 %\usepackage{amsmath}
 %\usepackage{listings}
 \graphicspath{{img/}}
@@ -86,10 +87,9 @@ Converting a 3D point cloud into a 2D matrix that still represents a face is not
 
 We first remove outlier points that definitely do not belong to the face. These outlier points can be detected using statistical measures such as the robust Mahalanobis distance or we can also set arbitrary thresholds based on some exploratory data analysis. All observed faces of the dataset used in this report showed no $x$,$y$ or $z$-coordinates with an absolute value greater than 200, while all outliers always had the same specific coordinate: (999999,999999,999999). Since the 3D point clouds used in this report only contain one specific type of outlier, a threshold that filters these points is deemed good enough to remove all outliers. In our implementation for our given dataset, all data points should satisfy the constraint: $|x|<500 \wedge |y| < 500 \wedge |z| < 500$.
 
-It seems that the 3D point clouds of the faces in our dataset are roughly aligned with the $xy$-surface. This means that a depth map of the face can be constructed by looking only at the $z$-coordinates. To construct a depth map of size $m \times n$, we need the $z$-coordinates of all data points of the intersections on a $m \times n$ grid overlaying the 3D face on the $xy$-surface. Unfortunately our point cloud does not follow a grid-like structure. To solve this, we first overlay the face with the smallest rectangle that still covers all data points. This rectangle is then split in a  $m \times n$ grid. The $z$-coordinates of all points on this grid are then linearly interpolated. In our implementation this linear interpolation is done by first triangulating the point cloud using Qhull and performing linear barycentric interpolation on each triangle. \cite{numpy}
-Points on the grid that cannot be interpolated because they fall outside the point cloud are given the same $z$-value as the point with the lowest $z-value$ in the point cloud. These points represent a wall behind the face.
-
-Finally, the $x$ and $y$-coordinates of the grid are dropped and only the interpolated $z$-values are kept in a $m \times n$ matrix. The values in
+It seems that the 3D point clouds of the faces in our dataset are roughly aligned with the $xy$-surface. This means that a depth map of the face can be constructed by looking only at the $z$-coordinates. To construct a depth map of size $m \times n$, we need the $z$-coordinates of all data points of the intersections on a $m \times n$ grid overlaying the 3D face on the $xy$-surface. Unfortunately our point cloud does not follow a grid-like structure. To solve this, we first overlay the face with the smallest rectangle that still covers all data points. This rectangle is then split in a  $m \times n$ grid. The $z$-coordinates of all points on this grid are then linearly interpolated. In our implementation this linear interpolation is done by first triangulating the point cloud using Qhull and performing linear barycentric interpolation on each triangle \cite{linearinerpolator2016}.
+Points on the grid that cannot be interpolated because they fall outside the convex shape of the point cloud are given the same $z$-value as the point with the lowest $z-value$ in the point cloud. These points represent a wall behind the face. Finally, the $x$ and $y$-coordinates of the grid are dropped and only the interpolated $z$-values are kept in a $m \times n$ matrix. Figure \ref{fig:depthmap-generation} illustrates the different steps in the construction of a depth map.
+%Finally, the values in the matrix are normalised such that the lowest value is zero.
 \begin{figure}
 	\centering
 	\includegraphics[width=\textwidth]{depthmapgeneration.pdf}
@@ -101,28 +101,127 @@ Finally, the $x$ and $y$-coordinates of the grid are dropped and only the interp
 %splitting colour images in 3 channels
 %how depth map was generated, 1.remove outliers 2. grid data
 
-%using LBP algorithm because better than eigenfaces, confirmed in pilot experiments
+\subsection{Similarity measure}
+We use the LBP algorithm to measure the similarity between two faces. We prefer LBP over Eigenfaces for a number of reasons. The original paper that applies LBP to face recognition claims the technique works better than Eigenfaces \cite{ahonen2004face}. We confirmed this on our own dataset through pilot experiments. Furthermore, the quality of the similarity measure is independent from the quality and quantity of the training data, whereas the quality of the Eigenfaces method varies with the training data. This is not a good characteristic when dealing with a small dataset of only 10 people, as in this report. Finally, LBP has the nice property that it is invariant to monotonic grey scale transformations. This means that its recognition rate is barely affected by different lighting conditions.
 
-%combining match scores by multiplying
+Each image is converted to a spatial histogram through the following parameters. The used operator is the original LBP operator which labels pixels using their 3x3 neighbourhoods. Each label is thus made up of 8 bits. Each image is divided in a $8 \times 8$ grid of regions. This is a common value used in publications \cite{facerecognizer2016}. The total spatial histogram thus consists of 64 concatenated histograms.
 
-%preprocessing on 2d faces
+To measure the similarity between histograms, the $\chi^2$ method is used. This is the same similarity measure that is used in the original paper we discussed. It is also a popular and well performing metric for texture comparisons and image retrieval in general \cite{puzicha1997non}.
+
+\subsection{Fusing recognizers}
+By using the methods in the previous section, we construct four different face recognizers, one for each channel. Given a probe, these recognizers provide match scores for all persons in the gallery. A match score is the similarity between a given probe and a person in the gallery. The lower the match score, the more likely it is that the probe is the face of that person.
+
+Fusing different recognizers is done by combining the match scores for each person over each channel and predicting the person with the best score. In this report, we try four different fusion rules suggested in a paper by Chang, Bowyer and Flynn \cite{chang2005evaluation}.
+
+%\paragraph{Sum rule}
+%For each person, the match scores on all channels are summed. The probe face gets the label of the person with the lowest total match score.
+%\paragraph{Product rule}
+%For each person, the match scores on all channels are multiplied. The probe face gets the label of the person with the lowest total match score. 
+%%	\item[Minimum rule] For each person, the minimum of the match scores on all channels is selected. The probe face gets the label of the person with the lowest minimum match score.
+%%	\item[Confidence rule] For each channel, the confidence of that channel is calculated as follows:
+%%	\[\frac{distance_2 - distance_1}{distance_3 - distance_1}\] where $distance_i$ is the $i$th smallest distance from the probe to one of the gallery faces. If the difference between the first and second distance metric is large compared to the typical distance, then this value will be large.
+%%	The probe face gets the label with the lowest match score from the channel with the highest confidence.
+%%\end{enumerate}
+
+\begin{itemize}
+	\item \textbf{Sum rule}\\For each person, the match scores on all channels are summed. The probe face gets the label of the person with the lowest total match score.
+	\item \textbf{Product rule}\\For each person, the match scores on all channels are multiplied. The probe face gets the label of the person with the lowest total match score. 
+	\item \textbf{Minimum rule}\\For each person, the minimum of the match scores on all channels is selected. The probe face gets the label of the person with the lowest minimum match score.
+	\item \textbf{Confidence rule}\\ For each channel, the confidence of that channel is calculated as follows:
+	\[\frac{distance_2 - distance_1}{distance_3 - distance_1}\] where $distance_i$ is the $i$th smallest distance from the probe to one of the gallery faces. If the difference between the first and second distance metric is large compared to the typical distance, then this value will be large.
+	The probe face gets the label with the lowest match score from the channel with the highest confidence.
+\end{itemize}
+
+\subsection{Optional: preprocessing 2D images}
+The 2D colour images in our given dataset are already of pretty high quality and all have more or less the same format. These images can thus be directly fed into our face recognizers. However, we can still perform two normalization steps: a rotation step and a crop step. These two normalization steps could in theory also be applied to more diverse images that have an obtrusive background and/or show more than just the face. Hence, the performance of our recognizers on the preprocessed 2D images should represent the performance on more diverse images than the almost perfect dataset we were given.
+
+Each image in our dataset is accompanied by a landmarks file. This file contains the coordinates of some landmarks on the face. Examples of these landmarks are: middle left eyebrow, inner right eyecorner, nose tip, left mouth corner, chin middle, etcetera. These landmarks are used in both steps of the normalization process.
+
+We first straighten the face by rotating the image such that the eyes are perfectly horizontal aligned. To do this, we calculate the angle between the outer left eye corner and the outer right eye corner. Finally, the figure is rotated to correct this angle using the nose tip landmark as a central point.
+
+Next, the face is cropped by the smallest rectangle that still contains all landmarks. This strategy ensures that all landmark textures are still visible on the cropped figure, while still removing as much of the surrounding figure as possible.
+
+An example of the normalization process (both the rotation and the crop step) is illustrated in Figure \ref{fig:preprocess}.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\textwidth]{preprocess2D.pdf}
+	\caption{Preprocessing an image by rotating it such that the eyes are horizontally aligned and afterwards cropping it to the smallest possible rectangle such that all landmarks are still contained in the figure.}
+	\label{fig:preprocess}
+\end{figure}
 
 \section{Experiments}
 \graphicspath{{img/experiments/}}
+We have implemented our face recognition system in Python. All experiments were run on a laptop running Windows 8.1 with an Intel Core i5-4210U CPU running at 1.7GHz and 4GB of RAM. All images were resized to a width of 135 pixels and a height of 150 pixels after any necessary preprocessing steps and just before being fed to the LBP face recognition algorithm.
+
+The dataset used in our experiments is a subset of the Bosphorus database and contains 2D and 3D images of 10 subjects. The assignment for this report stated that the first 5 subjects could be used for training and the last 5 subjects were to be used for testing. The assignment further stated that the neutral faces were to be used as gallery images and all other images as probe images.
+
+Table \ref{tab:traintestall} shows the recognition rate for each separate channel for the training set, the test set and all subjects. We note that the recognition rate between the training set and the test set varies greatly. This means that the performance of our face recognition system on the training set is not an accurate estimator of the performance on the test set. Furthermore, we already achieve a perfect recognition rate for some channels on the training set. The performance of our face recognizer can thus not be improved when tuning purely on the training set.
+
+\begin{table}
+	\centering
+	\begin{tabular}{lrrr}
+		\toprule
+		& training set & test set & all faces\\
+		\midrule
+		R-channel (2D) & 0.968 & 0.867 & 0.902\\
+		G-channel (2D) & 1 & 0.8 & 0.885 \\
+		B-channel (2D) & 1 & 0.63 & 0.803 \\
+		Depthmap (3D) & 0.548 & 0.7 & 0.607 \\
+		\bottomrule
+	\end{tabular}
+	\caption{Recognition rates for different combinations of channels and sets of subjects.}
+	\label{tab:traintestall}
+\end{table}
+
+Splitting a dataset in a training set and a test set is usually done to prevent the overfitting of parameters when tuning a classification system. However, this is only advised when there is enough data available. Since we only have 10 subjects and do not perform any rigorous parameter tuning, we choose to test different configurations of our face recognition system on the entire dataset for our experiments.
+
 We have conducted experiments to attempt to answer the following research questions.
 \begin{itemize}
-	\item[Q1] Is it better to preprocess the face images or do the raw images perform better?
-	\item[Q2] Does fusion significantly raise the recognition rate?
-	\item[Q3] What is the contribution of depth to our face recognizer?
-	\item[Q4] What is the best way to fuse match scores?
+	\item[Q1] Does fusion significantly raise the recognition rate?
+	\item[Q2] What is the contribution of depth to our face recognizer?
+	\item[Q3] What is the best way to fuse match scores?
+	\item[Q4] Is it better to preprocess the face images or do the raw images perform better?
 \end{itemize}
+
+We evaluate two fused face recognition system. The first face recognition systems combines the three colour channels. The second face recognition system adds depth to the mix and thus combines all four channels. Table \ref{tab:fusion-rules} shows the recognition rates of these two face recognition systems for different fusion rules.
+\begin{table}
+	\centering
+	\begin{tabular}{lrrrr}
+		\toprule
+		& Sum & Product & Minimum & Confidence\\
+		\midrule
+		Colour (2D) & 0.951 & 0.951 & 0.803 & 0.836\\
+		Colour and Depth (2D + 3D) & 0.738 & 0.770 & 0.803 & 0.803 \\
+		\bottomrule
+	\end{tabular}
+	\caption{Recognition rates of the entire dataset of fused face recognition systems for different fusion rules.}
+	\label{tab:fusion-rules}
+\end{table}
 % already almost perfect score for training set + no real parameters to tune -> lets use full set
 
 % results for 4 channels, colour and colour + depth
 
-% results after preprocessing: 4 channels, colour and colour + depth 
+% results after preprocessing: 4 channels, colour and colour + depth
+
+\begin{table}
+	\centering
+	\begin{tabular}{lrr}
+		\toprule
+			& No preprocessing & preprocessing\\
+		\midrule
+		R-channel (2D) & 0.902& 0.902\\
+		G-channel (2D) & 0.885& 0.869 \\
+		B-channel (2D) & 0.803& 0.754  \\
+		Colour (2D) & 0.951& 0.934\\
+		Colour and Depth (2D + 3D) & 0.770 & 0.820\\
+		\bottomrule
+	\end{tabular}
+	\caption{Recognition rates for different face recognition systems using the preprocessed 2D images}
+	\label{tab:preprocess-rr}
+\end{table}
 \section{Conclusion}
 %\printbibliography
 \bibliography{references}
-\bibliographystyle{plain}
+\bibliographystyle{IEEEtran}
 \end{document}
