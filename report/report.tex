@@ -21,7 +21,9 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-This report discusses the implementation of a face recognition system that makes use of 2D and 3D face representations. First, three relevant papers are discussed: a paper about using eigenfaces for facial recognition, a paper about using local binary patterns and a paper about combining 2D and 3D face recognition. Next, we describe the implementation of our face recognition system. Our implementation uses methods that are heavily based on the three papers we read. Finally, experiments are performed for 2D face recognition, 3D face recognition and the combination of 2D and 3D face recognition.
+This report discusses the implementation of a face recognition system that makes use of 2D and 3D face representations. First, two relevant papers are discussed: a paper about using eigenfaces for facial recognition and a paper about using local binary patterns. Next, we describe the implementation of our face recognition system. Our implementation uses methods that are heavily based on the two papers we read. Finally, experiments are performed for 2D face recognition, 3D face recognition and the combination of 2D and 3D face recognition. A recognition rate of 95\% is obtained by applying LBP on all three channels of 2D colour images and fusing them with the $product$ rule.
+%TODO
+
 \end{abstract}
 
 \section{Literature study}
@@ -133,7 +135,7 @@ Fusing different recognizers is done by combining the match scores for each pers
 \end{itemize}
 
 \subsection{Optional: preprocessing 2D images}
-The 2D colour images in our given dataset are already of pretty high quality and all have more or less the same format. These images can thus be directly fed into our face recognizers. However, we can still perform two normalization steps: a rotation step and a crop step. These two normalization steps could in theory also be applied to more diverse images that have an obtrusive background and/or show more than just the face. Hence, the performance of our recognizers on the preprocessed 2D images should represent the performance on more diverse images than the almost perfect dataset we were given.
+The 2D colour images in our given dataset are already of pretty high quality and all have more or less the same format (eg., similar posture, similar distance to camera, similar lighting, etc.). These images can thus be directly fed into our face recognizers. However, we can still perform two normalization steps: a rotation step and a crop step. These two normalization steps could in theory also be applied to more diverse images that have an obtrusive background and/or show more than just the face. Hence, the performance of our recognizers on the preprocessed 2D images should represent the performance on more diverse images than the almost perfect dataset we were given.
 
 Each image in our dataset is accompanied by a landmarks file. This file contains the coordinates of some landmarks on the face. Examples of these landmarks are: middle left eyebrow, inner right eyecorner, nose tip, left mouth corner, chin middle, etcetera. These landmarks are used in both steps of the normalization process.
 
@@ -152,11 +154,16 @@ An example of the normalization process (both the rotation and the crop step) is
 
 \section{Experiments}
 \graphicspath{{img/experiments/}}
+We have conducted experiments to attempt to answer the following research questions.
+\begin{itemize}
+	\item[Q1] Which performs better: 2D or 3D face recognition?
+	\item[Q2] Does fusion significantly raise the recognition rat? If so, what is the best way to fuse match scores?
+	\item[Q3] Is it better to preprocess the 2D face images or do the raw images perform better?
+\end{itemize}
+
 We have implemented our face recognition system in Python. All experiments were run on a laptop running Windows 8.1 with an Intel Core i5-4210U CPU running at 1.7GHz and 4GB of RAM. All images were resized to a width of 135 pixels and a height of 150 pixels after any necessary preprocessing steps and just before being fed to the LBP face recognition algorithm.
 
 The dataset used in our experiments is a subset of the Bosphorus database and contains 2D and 3D images of 10 subjects. The assignment for this report stated that the first 5 subjects could be used for training and the last 5 subjects were to be used for testing. The assignment further stated that the neutral faces were to be used as gallery images and all other images as probe images.
-
-Table \ref{tab:traintestall} shows the recognition rate for each separate channel for the training set, the test set and all subjects. We note that the recognition rate between the training set and the test set varies greatly. This means that the performance of our face recognition system on the training set is not an accurate estimator of the performance on the test set. Furthermore, we already achieve a perfect recognition rate for some channels on the training set. The performance of our face recognizer can thus not be improved when tuning purely on the training set.
 
 \begin{table}
 	\centering
@@ -174,17 +181,10 @@ Table \ref{tab:traintestall} shows the recognition rate for each separate channe
 	\label{tab:traintestall}
 \end{table}
 
-Splitting a dataset in a training set and a test set is usually done to prevent the overfitting of parameters when tuning a classification system. However, this is only advised when there is enough data available. Since we only have 10 subjects and do not perform any rigorous parameter tuning, we choose to test different configurations of our face recognition system on the entire dataset for our experiments.
+\paragraph{Q1} Table \ref{tab:traintestall} shows the recognition rate for each separate channel for the training set, the test set and all subjects. The 2D channels clearly show better performance than the 3D channel. This conflicts with observations in \cite{chang2005evaluation,tsalakanidou2003use} which state that similar recognition rates can be obtained using a single 2D image or a single 3D image. This suggests that our implementation of a 3D face recognition might be subpar. A possible improvement to our system could be to first properly align all faces in 3D space, before constructing a depth map. Our current system does not do this and assumes that all 3D faces are already aligned with the xy-surface. This assumption was based on an exploratory data analysis, but might not hold for the entire dataset.
 
-We have conducted experiments to attempt to answer the following research questions.
-\begin{itemize}
-	\item[Q1] Does fusion significantly raise the recognition rate?
-	\item[Q2] What is the contribution of depth to our face recognizer?
-	\item[Q3] What is the best way to fuse match scores?
-	\item[Q4] Is it better to preprocess the face images or do the raw images perform better?
-\end{itemize}
+We note that the recognition rate between the training set and the test set varies greatly. This means that the performance of our face recognition system on the training set is not an accurate estimator of the performance on the test set. Furthermore, we already achieve a perfect recognition rate for some channels on the training set. The performance of our face recognition system can thus not be improved when tuning purely on the training set. Splitting a dataset in a training set and a test set is usually done to prevent the overfitting of parameters when tuning a classification system. However, this is only advised when there is enough data available. Since we only have 10 subjects and do not perform any rigorous parameter tuning, we choose to test different configurations of our face recognition system on the entire dataset for the remainder of our experiments.
 
-We evaluate two fused face recognition system. The first face recognition systems combines the three colour channels. The second face recognition system adds depth to the mix and thus combines all four channels. Table \ref{tab:fusion-rules} shows the recognition rates of these two face recognition systems for different fusion rules.
 \begin{table}
 	\centering
 	\begin{tabular}{lrrrr}
@@ -198,17 +198,16 @@ We evaluate two fused face recognition system. The first face recognition system
 	\caption{Recognition rates of the entire dataset of fused face recognition systems for different fusion rules.}
 	\label{tab:fusion-rules}
 \end{table}
-% already almost perfect score for training set + no real parameters to tune -> lets use full set
 
-% results for 4 channels, colour and colour + depth
+\paragraph{Q2} We evaluate two fused face recognition system. The first face recognition systems combines the three colour channels. The second face recognition system adds depth to the mix and thus combines all four channels. Table \ref{tab:fusion-rules} shows the recognition rates of these two face recognition systems for different fusion rules. We can see that fusion has a positive effect. A higher recognition rate is achieved when all three colour channels are combined than for any single channel. The fusion of 2D and 3D actually lowers the recognition rate, compared to just 2D alone. This happens most likely due to the bad performance of our 3D face recognition system.
 
-% results after preprocessing: 4 channels, colour and colour + depth
+Fusion rules that combine all match scores such as $Sum$ and $Product$ achieve a high recognition rate when combining channels of high quality (ie., the 2D channels), but show a drop in performance when combined with a channel of lesser quality (the 3D channel). Fusion rules that select the best channel based on some criterium ($Min$ and $Confidence$) do not achieve better performance than their individual parts, but do appear to be a bit more robust when combined with a channel of lesser quality. Our recommendation is thus to use the $Product$ rule when it is known that all channels show similar good performance and to use the $Confidence$ rule when it is not sure that all channel are reliable.
 
 \begin{table}
 	\centering
 	\begin{tabular}{lrr}
 		\toprule
-			& No preprocessing & preprocessing\\
+			& raw & preprocessed\\
 		\midrule
 		R-channel (2D) & 0.902& 0.902\\
 		G-channel (2D) & 0.885& 0.869 \\
@@ -217,11 +216,17 @@ We evaluate two fused face recognition system. The first face recognition system
 		Colour and Depth (2D + 3D) & 0.770 & 0.820\\
 		\bottomrule
 	\end{tabular}
-	\caption{Recognition rates for different face recognition systems using the preprocessed 2D images}
+	\caption{Recognition rates for different face recognition systems using either raw or preprocessed 2D images. The fused recognition systems used the $Product$ fusion rule.}
 	\label{tab:preprocess-rr}
 \end{table}
+
+\paragraph{Q3}
+Table \ref{tab:preprocess-rr} shows the recognition rates for different face recognition systems using either raw or preprocessed 2D images. No significant drop or increase in performance is detected. We definitely did not expect a huge increase in performance, since the images in our given data are already of high quality and have very similar formats. The fact that similar recognition rates are achieved on the preprocessed images suggest that almost no useful information and/or characteristics of the face are lost during the processing steps. We therefore believe that our face recognition system for 2D images could be successfully applied to more diverse images, as long as they contain a front view of the face of the person to be recognized.
+
 \section{Conclusion}
-%\printbibliography
+This report discussed our implementation of a face recognition system that makes use of 2D and 3D face images. Two relevant papers for recognizing faces were discussed. The first paper described a holistic approach: Eigenfaces. The second paper introduced a feature based approach: local binary patterns (LBP). We split 2D images up in three colour channels and convert a 3D point clouds into depth maps by interpolating values on a 2D grid. We chose to use LBP as our distance measure, because it had a couple of clear advantages over Eigenfaces, such as being shown to perform better in its introductory paper and being independent from the quality and quantity of data in the training set. We listed four different fusion rules. We described our approach for preprocessing 2D face images through a rotation and crop step based on the accompanying anatomical landmarks.
+
+Experiments suggest that our implementation of a 3D face recognition system is subpar compared to other work. Fusion of recognition systems increases the recognition rate. The best rule for fusing face recognition systems is the $Product$ rule if all individual face recognition systems show good performance. Otherwise, the $Confidence$ rule appears to be the most robust. Preprocessing faces shows no significant increase or decrease compared to the raw images. This leads us to believe that our face recognition system would also perform well on more diverse images. A recognition rate of 95\% is obtained by applying LBP on all three channels of 2D colour images and fusing them with the $product$ rule.
 \bibliography{references}
 \bibliographystyle{IEEEtran}
 \end{document}
