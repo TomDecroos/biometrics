@@ -30,6 +30,10 @@ import matplotlib.pyplot as plt
 #     bottom = int(max(y))
 #     img = img.crop((left,top,right,bottom))
 #     return img
+
+def transformed2Dimg(face):
+    return face.face2D.getTransformedImg()
+
 def rotatePoint(centerPoint,point,angle):
     """Rotates a point around another centerPoint. Angle is in degrees.
     Rotation is counter-clockwise"""
@@ -40,8 +44,6 @@ def rotatePoint(centerPoint,point,angle):
     return temp_point
     
 
-def cropFace(img,nose):
-    pass
 if __name__ == '__main__':
     from datalayer.person import loadFaces
     faces = loadFaces('trainset')

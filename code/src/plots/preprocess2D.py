@@ -28,7 +28,7 @@ def preprocess2DImg(face):
     axs[0].plot(x,y,lw=2,c='green')
     #x,y = zip(*[la.coor for la in face.face2D.landmarks])
     x,y = zip(*[lefteye,righteye,nose])
-    axs[0].scatter(x,y,s=50,c='red')
+    axs[0].scatter(x,y,s=50,c='yellow')
     w,h = img.size
     axs[0].set_xlim(0,w)
     axs[0].set_ylim(h,0)
@@ -40,7 +40,7 @@ def preprocess2DImg(face):
     #img = CropFace(img, eye_left=left, eye_right=right, offset_pct=(0.01,0.01), dest_sz = (90,100))
     axs[1].imshow(img)
     x,y = zip(*[rotatePoint(nose,la.coor,rotation) for la in face.face2D.landmarks])
-    axs[1].scatter(x,y,s=50,c='red')
+    axs[1].scatter(x,y,s=50,c='yellow')
     
     axs[1].set_xlim(0,w)
     axs[1].set_ylim(h,0)
@@ -55,7 +55,7 @@ def preprocess2DImg(face):
     axs[2].imshow(img,aspect='equal')
     x = [a-left for a in x]
     y = [a-adjtop for a in y]
-    axs[2].scatter(x,y,s=50,c='red')
+    axs[2].scatter(x,y,s=50,c='yellow')
     w,h = img.size
     axs[2].set_xlim(0,w)
     axs[2].set_ylim(h,0)
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     faces = loadFaces('trainset')
     face = faces[16]
     preprocess2DImg(face)
-    #saveplot('methods/preprocess2D')
+    saveplot('methods/preprocess2D')
     plt.show()
     for face in faces:
         preprocess2DImg(face)

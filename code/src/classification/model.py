@@ -78,7 +78,13 @@ class SimpleFusionModel(BaseFusionModel):
     
     def predict(self, probe):
         preds = [model.predict(probe) for model in self.models]
-        return combinePreds(preds)
+        labels = {}
+        for label,confidence in preds:
+            if labels.has_key(label):
+                labels[label] += confidence
+            else:
+                labels[label] = confidence
+        return min(labels.items(),key=lambda x:x[1])
 
 class MatchScoreModel(BaseModel):
     
